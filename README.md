@@ -4,6 +4,8 @@ Recommends the 10 closest locations of a given category, where *closest* means
 **road/grid traversal distance** over the links listed in a link file, and the
 candidate must lie inside a **circular (Euclidean) radius** of the query point.
 
+**Live deployment:** `http://10.1.75.51:3287/search/` (health check at `/health`, interactive docs at `/docs`).
+
 Dataset: `locations.csv` (10,000 points on a 100 x 100 lattice, 8 categories).
 
 ## Quick start
@@ -86,6 +88,20 @@ Errors (missing field, unknown category, non-numeric value, unreachable URL) ret
 
 Parsed link files are cached by content hash, so repeated queries with the same file skip the parse.
 See [REPORT.md](REPORT.md) for details, verification and assumptions.
+
+## Run with Docker
+
+The whole stack (nginx front end + API) starts with one command:
+
+```bash
+docker compose up --build -d          # http://localhost:3000/  (set WEB_PORT to change the port)
+docker compose --profile test run --rm smoke   # optional end-to-end test
+docker compose down
+```
+
+`web` (nginx, port 3000) serves a static search page and proxies `/search/`, `/health` and `/docs`
+to `api` (FastAPI), which is only reachable on the internal compose network.
+See [DOCKER_REPORT.md](DOCKER_REPORT.md) for the design choices.
 
 ## Tools
 

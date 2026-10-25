@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proximity Search</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+  h1 { margin-bottom: .2rem; }
+  .sub { color: #666; margin-top: 0; }
+  label { display: block; margin: .7rem 0 .2rem; font-weight: 600; }
+  input, select { width: 100%; padding: .45rem; box-sizing: border-box; }
+  button { margin-top: 1rem; padding: .55rem 1.2rem; font-size: 1rem; }
+  pre { background: #f4f4f6; padding: 1rem; overflow: auto; border-radius: 6px; }
+  code { background: #f4f4f6; padding: 0 .3em; }
+  .status { margin: .6rem 0; font-size: .9rem; color: #555; }
+</style>
+</head>
+<body>
+<h1>Proximity Search</h1>
+<p class="sub">Static front end served by nginx; requests are proxied to the FastAPI service on the internal Docker network.</p>
+<p class="status" id="status">checking API...</p>
+<form id="f">
+  <label>lat</label><input name="lat" value="0.5" required>
+  <label>long</label><input name="long" value="0.5" required>
+  <label>cat</label><select name="cat" id="cat"></select>
+  <label>rad</label><input name="rad" value="0.2" required>
+  <label>link (txt file, "a b" per line; leave empty to use the full lattice)</label>
+  <input type="file" name="link" accept=".txt,text/plain">
+  <button type="submit">Search</button>
+</form>
+<p>API docs: <a href="/docs">/docs</a> &middot; health: <a href="/health">/health</a></p>
+<pre id="out"></pre>
+<script>
+const status = document.getElementById('status');
+fetch('/health').then(r => r.json()).then(h => {
+  status.textContent = `API ok: ${h.locations} locations, ${h.categories.length} categories`;
+  const sel = document.getElementById('cat');
+  for (const c of h.categories) { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); }
+}).catch(() => { status.textContent = 'API not reachable'; });
+
+document.getElementById('f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const f = fd.get('link');
+  if (!f || !f.name) fd.delete('link');
+  const out = document.getElementById('out');
+  out.textContent = 'searching...';
+  const r = await fetch('/search/', { method: 'POST', body: fd });
+  out.textContent = JSON.stringify(await r.json(), null, 2);
+});
+</script>
+</body>
+</html>

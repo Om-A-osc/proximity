@@ -31,3 +31,6 @@ links_*.txt
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Generated reports
+*.pdf

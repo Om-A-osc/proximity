@@ -1,0 +1,66 @@
+name: proximity
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: proximity-api:1.0
+    container_name: proximity-api
+    environment:
+      PORT: "8000"
+      WORKERS: "${API_WORKERS:-1}"
+      LOG_LEVEL: "${API_LOG_LEVEL:-info}"
+      LOCATIONS_CSV: /app/locations.csv
+    volumes:
+      # dataset mounted read-only so it can be swapped without rebuilding
+      - ./locations.csv:/app/locations.csv:ro
+    expose:
+      - "8000"            # reachable only inside the compose network
+    networks:
+      - proximity-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    image: proximity-web:1.0
+    container_name: proximity-web
+    environment:
+      API_UPSTREAM: http://api:8000
+      MAX_UPLOAD: 50m
+    ports:
+      - "${WEB_PORT:-3000}:80"   # the only port published to the host
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - proximity-net
+    restart: unless-stopped
+
+  # one-shot end-to-end check:  docker compose --profile test run --rm smoke
+  smoke:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: proximity-api:1.0
+    profiles: ["test"]
+    environment:
+      API_URL: http://web
+    command: ["python", "tools/smoke.py"]
+    depends_on:
+      web:
+        condition: service_started
+    networks:
+      - proximity-net
+
+networks:
+  proximity-net:
+    driver: bridge

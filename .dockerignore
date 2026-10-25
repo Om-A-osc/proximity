@@ -1,0 +1,13 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+*.log
+*.pdf
+*.md
+links_*.txt
+web
+Procfile
+render.yaml
+docker-compose.yml

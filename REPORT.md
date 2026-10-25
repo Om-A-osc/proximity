@@ -1,5 +1,9 @@
 # Proximity Recommendation API: Report
 
+**Author:** Om Anand (ID 12341510)  
+**Repository:** <https://github.com/Om-A-osc/proximity>  
+**Live API:** <http://10.1.75.51:3287/search/>
+
 ## 1. Problem
 
 Given a dataset of locations on a 1 x 1 grid and a road-link file, build an API
@@ -162,10 +166,17 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 curl -F lat=0.5 -F long=0.5 -F cat=bank -F rad=0.2 -F link=@links.txt http://127.0.0.1:8000/search/
 ```
 
+The API is deployed on the course server at `http://10.1.75.51:3287` (endpoint
+`http://10.1.75.51:3287/search/`, health check at `/health`, interactive docs at `/docs`).
+It runs under Uvicorn in a virtual environment in `~/proximity` and is started with
+`~/proximity/start.sh`; requests are logged to `~/proximity/server.log`.
+
 `Procfile`, `render.yaml` and a `Dockerfile` are included for hosting on Render,
 Railway, Heroku-style platforms or any container host.
 
 ## 9. Files
+
+Source code: <https://github.com/Om-A-osc/proximity>
 
 | file                 | purpose                                              |
 |----------------------|------------------------------------------------------|
